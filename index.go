@@ -37,11 +37,13 @@ func main() {
  				}
 			}
 		}`
+		// create the new index
+		_, err := client.CreateIndex(POST_INDEX).Body(mapping).Do(context.Background())
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("Post index is created")
+	} else {
+		fmt.Println("Post index already exists")
 	}
-	// create the new index
-	_, err := client.CreateIndex(POST_INDEX).Body(mapping).Do(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Post index is created")
 }
