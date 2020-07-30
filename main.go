@@ -4,18 +4,21 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"reflect"
 	"strconv"
 
+	"cloud.google.com/go/storage"
 	"github.com/olivere/elastic"
 )
 
 const (
-	POST_INDEX = "post"
-	DISTANCE   = "200km" // the default distance for Elasticsearch
-	ES_URL     = "http://10.128.0.2:9200"
+	POST_INDEX  = "post"
+	DISTANCE    = "200km" // the default distance for Elasticsearch
+	ES_URL      = "http://10.128.0.2:9200"
+	BUCKET_NAME = "socialme-bucket" // GCS bucket name
 )
 
 // a representation of the location of a post
@@ -142,4 +145,37 @@ func getPostFromSearchResult(searchResult *elastic.SearchResult) []Post {
 		posts = append(posts, p)
 	}
 	return posts
+}
+
+// saves post images to GCS
+func saveToGCS(r io.Reader, objectName string) (string, error) {
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		return "", err
+	}
+	bucket := client.Bucket(BUCKET_NAME)
+	if _, err := bucket.Attrs(ctx); err != nil {
+		return "", err
+	}
+	// start upload file
+	object := bucket.Object(objectName)
+	wc := object.NewWriter(ctx)
+	if _, err := io.Copy(wc, r); err != nil {
+		return "", err
+	}
+	if err := wc.Close(); err != nil {
+		return "", err
+	}
+	// end upload file
+	// set access control
+	if err := object.ACL().Set(ctx, storage.AllUsers, storage.RoleReader); err != nil {
+		return "", err
+	}
+	attrs, err := object.Attrs(ctx)
+	if err != nil {
+		return "", err
+	}
+	fmt.Printf("Image is saved to GCS: %s\n", attrs.MediaLink)
+	return attrs.MediaLink, nil
 }
