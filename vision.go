@@ -7,7 +7,7 @@ import (
 	vision "cloud.google.com/go/vision/apiv1"
 )
 
-// annotates an image file using the Cloud VIsion API, return score and error
+// annotate an image file using the Cloud VIsion API, return score and error
 // score: the percentage of possibility
 func annotate(uri string) (float32, error) {
 	ctx := context.Background()

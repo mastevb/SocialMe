@@ -64,7 +64,7 @@ type Post struct {
 
 func main() {
 	fmt.Println("started-service")
-	// tells the http package to handle all requests to the
+	// tell the http package to handle all requests to the
 	// web root with handler
 	http.HandleFunc("/post", handlerPost)
 	http.HandleFunc("/search", handlerSearch)
@@ -85,7 +85,7 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	lat, _ := strconv.ParseFloat(r.FormValue("lat"), 64)
 	lon, _ := strconv.ParseFloat(r.FormValue("lon"), 64)
-	// constructs post
+	// construct post
 	p := &Post{
 		User:    r.FormValue("user"),
 		Message: r.FormValue("message"),
@@ -100,7 +100,7 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("Image is not available %v\n", err)
 		return
 	}
-	// gets media type
+	// get media type
 	suffix := filepath.Ext(header.Filename)
 	if t, ok := mediaTypes[suffix]; ok {
 		p.Type = t
@@ -108,7 +108,7 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 		p.Type = "unknown"
 	}
 	id := uuid.New()
-	// saves the media to GCS
+	// save the media to GCS
 	mediaLink, err := saveToGCS(file, id)
 	if err != nil {
 		http.Error(w, "Failed to save image to GCS", http.StatusInternalServerError)
@@ -134,8 +134,8 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handles search request sent by user
-// calls helper functions to read and convert results
+// handle search request sent by user
+// call helper functions to read and convert results
 func handlerSearch(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Received one request for search")
 	w.Header().Set("Content-Type", "application/json")
@@ -174,7 +174,7 @@ func handlerSearch(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 
-// handles cluster requests
+// handle cluster requests
 // ex. /cluser?term=face -> images with faces
 func handlerCluster(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Received one cluster request")
@@ -199,7 +199,7 @@ func handlerCluster(w http.ResponseWriter, r *http.Request) {
 //////////////////////////////////////////////////////////////////////////////
 // Helper Functions
 
-// reads the data from Elasticsearch
+// read the data from Elasticsearch
 func readFromES(query elastic.Query, index string) (*elastic.SearchResult, error) {
 	client, err := elastic.NewClient(elastic.SetURL(ES_URL))
 	if err != nil {
@@ -217,11 +217,11 @@ func readFromES(query elastic.Query, index string) (*elastic.SearchResult, error
 	return searchResult, nil
 }
 
-// converts the search result to post information
+// convert the search result to post information
 func getPostFromSearchResult(searchResult *elastic.SearchResult) []Post {
 	var ptype Post
 	var posts []Post
-	// extracts dynamic type information
+	// extract dynamic type information
 	// access the underlying "Post" value
 	for _, item := range searchResult.Each(reflect.TypeOf(ptype)) {
 		p := item.(Post)
@@ -230,7 +230,7 @@ func getPostFromSearchResult(searchResult *elastic.SearchResult) []Post {
 	return posts
 }
 
-// saves post images to GCS
+// save post images to GCS
 func saveToGCS(r io.Reader, objectName string) (string, error) {
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)
@@ -263,7 +263,7 @@ func saveToGCS(r io.Reader, objectName string) (string, error) {
 	return attrs.MediaLink, nil
 }
 
-// saves a user post to Elasticsearch
+// save a user post to Elasticsearch
 func saveToES(post *Post, index string, id string) error {
 	client, err := elastic.NewClient(elastic.SetURL(ES_URL))
 	if err != nil {
