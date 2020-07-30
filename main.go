@@ -7,11 +7,13 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"path/filepath"
 	"reflect"
 	"strconv"
 
 	"cloud.google.com/go/storage"
 	"github.com/olivere/elastic"
+	"github.com/pborman/uuid"
 )
 
 const (
@@ -19,6 +21,21 @@ const (
 	DISTANCE    = "200km" // the default distance for Elasticsearch
 	ES_URL      = "http://10.128.0.2:9200"
 	BUCKET_NAME = "socialme-bucket" // GCS bucket name
+)
+
+// media types
+var (
+	mediaTypes = map[string]string{
+		".jpeg": "image",
+		".jpg":  "image",
+		".gif":  "image",
+		".png":  "image",
+		".mov":  "video",
+		".mp4":  "video",
+		".avi":  "video",
+		".flv":  "video",
+		".wmv":  "video",
+	}
 )
 
 // a representation of the location of a post
@@ -51,6 +68,7 @@ func main() {
 	// web root with handler
 	http.HandleFunc("/post", handlerPost)
 	http.HandleFunc("/search", handlerSearch)
+	http.HandleFunc("/cluster", handlerCluster)
 	// specify the program should listen on port 8080
 	// nil -> DefaultServeMux
 	// log error with log.Fatal
@@ -63,14 +81,57 @@ func main() {
 // handles post request sent by user
 // constructs a Post object accordingly
 func handlerPost(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Receieved one post request")
-	decoder := json.NewDecoder(r.Body)
-	var p Post
-	// if an error was encountered
-	if err := decoder.Decode(&p); err != nil {
-		panic(err)
+	fmt.Println("Received one request")
+	w.Header().Set("Content-Type", "application/json")
+	lat, _ := strconv.ParseFloat(r.FormValue("lat"), 64)
+	lon, _ := strconv.ParseFloat(r.FormValue("lon"), 64)
+	// constructs post
+	p := &Post{
+		User:    r.FormValue("user"),
+		Message: r.FormValue("message"),
+		Location: Location{
+			Lat: lat,
+			Lon: lon,
+		},
 	}
-	fmt.Fprintf(w, "Post received: %s\n", p.Message)
+	file, header, err := r.FormFile("image")
+	if err != nil {
+		http.Error(w, "Image is not available", http.StatusBadRequest)
+		fmt.Printf("Image is not available %v\n", err)
+		return
+	}
+	// gets media type
+	suffix := filepath.Ext(header.Filename)
+	if t, ok := mediaTypes[suffix]; ok {
+		p.Type = t
+	} else {
+		p.Type = "unknown"
+	}
+	id := uuid.New()
+	// saves the media to GCS
+	mediaLink, err := saveToGCS(file, id)
+	if err != nil {
+		http.Error(w, "Failed to save image to GCS", http.StatusInternalServerError)
+		fmt.Printf("Failed to save image to GCS %v\n", err)
+		return
+	}
+	p.Url = mediaLink
+	if p.Type == "image" { // detect faces
+		uri := fmt.Sprintf("gs://%s/%s", BUCKET_NAME, id)
+		if score, err := annotate(uri); err != nil {
+			http.Error(w, "Failed to annotate image", http.StatusInternalServerError)
+			fmt.Printf("Failed to annotate the image %v\n", err)
+			return
+		} else {
+			p.Face = score // assign confidence score
+		}
+	}
+	err = saveToES(p, POST_INDEX, id)
+	if err != nil {
+		http.Error(w, "Failed to save post to Elasticsearch", http.StatusInternalServerError)
+		fmt.Printf("Failed to save post to Elasticsearch %v\n", err)
+		return
+	}
 }
 
 // handles search request sent by user
@@ -110,6 +171,28 @@ func handlerSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// write to response
+	w.Write(js)
+}
+
+// handles cluster requests
+// ex. /cluser?term=face -> images with faces
+func handlerCluster(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Received one cluster request")
+	w.Header().Set("Content-Type", "application/json")
+	term := r.URL.Query().Get("term")
+	query := elastic.NewRangeQuery(term).Gte(0.9) // confidence level
+	searchResult, err := readFromES(query, POST_INDEX)
+	if err != nil {
+		http.Error(w, "Failed to read from Elasticsearch", http.StatusInternalServerError)
+		return
+	}
+	posts := getPostFromSearchResult(searchResult)
+	js, err := json.Marshal(posts)
+	if err != nil {
+		http.Error(w, "Failed to parse post object", http.StatusInternalServerError)
+		fmt.Printf("Failed to parse post object %v\n", err)
+		return
+	}
 	w.Write(js)
 }
 
@@ -178,4 +261,22 @@ func saveToGCS(r io.Reader, objectName string) (string, error) {
 	}
 	fmt.Printf("Image is saved to GCS: %s\n", attrs.MediaLink)
 	return attrs.MediaLink, nil
+}
+
+// saves a user post to Elasticsearch
+func saveToES(post *Post, index string, id string) error {
+	client, err := elastic.NewClient(elastic.SetURL(ES_URL))
+	if err != nil {
+		return err
+	}
+	_, err = client.Index().
+		Index(index).
+		Id(id).
+		BodyJson(post).
+		Do(context.Background())
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Post is saved to index: %s\n", post.Message)
+	return nil
 }
