@@ -66,5 +66,6 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		fmt.Println("User index is created")
 	}
 }
