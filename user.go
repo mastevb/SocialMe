@@ -59,7 +59,7 @@ func handlerLogin(w http.ResponseWriter, r *http.Request) {
 		"username": user.Username,
 		"exp":      time.Now().Add(time.Hour * 24).Unix(),
 	})
-	tokenString, err := token.SingedString(mySigningKey)
+	tokenString, err := token.SignedString(mySigningKey)
 	if err != nil {
 		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
 		fmt.Printf("Failed to generate token %v\n", err)
