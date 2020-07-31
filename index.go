@@ -10,6 +10,7 @@ import (
 const (
 	POST_INDEX = "post"
 	ES_URL     = "http://10.128.0.2:9200" // GCE internal IP
+	USER_INDEX = "user"
 )
 
 // create indexes in Elasticsearch
@@ -19,6 +20,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	// create post index in Elasticsearch
 	// check if the index exists
 	exists, err := client.IndexExists(POST_INDEX).Do(context.Background())
 	if err != nil {
@@ -43,7 +45,26 @@ func main() {
 			panic(err)
 		}
 		fmt.Println("Post index is created")
-	} else {
-		fmt.Println("Post index already exists")
+	}
+	// create user index in Elasticsearch
+	exists, err = client.IndexExists(USER_INDEX).Do(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	if !exists {
+		mapping := `{
+			"mappings": {
+				"properties": {
+					"username": {"type": "keyword"},
+					"password": {"type": "keyword", "index": false},
+					"age":      {"type": "long", "index": false},
+					"gender":   {"type": "keyword", "index": false}
+				}
+			}
+		}`
+		_, err = client.CreateIndex(USER_INDEX).Body(mapping).Do(context.Background())
+		if err != nil {
+			panic(err)
+		}
 	}
 }

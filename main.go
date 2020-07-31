@@ -12,6 +12,7 @@ import (
 	"strconv"
 
 	"cloud.google.com/go/storage"
+	"github.com/gorilla/mux"
 	"github.com/olivere/elastic"
 	"github.com/pborman/uuid"
 )
@@ -64,15 +65,17 @@ type Post struct {
 
 func main() {
 	fmt.Println("started-service")
+	// router for HTTP method restrictions
+	r := mux.NewRouter()
 	// tell the http package to handle all requests to the
 	// web root with handler
-	http.HandleFunc("/post", handlerPost)
-	http.HandleFunc("/search", handlerSearch)
-	http.HandleFunc("/cluster", handlerCluster)
+	r.Handle("/post", http.HandlerFunc(handlerPost)).Methods("POST", "OPTIONS")
+	r.Handle("/search", http.HandlerFunc(handlerSearch)).Methods("GET", "OPTIONS")
+	r.Handle("/cluster", http.HandlerFunc(handlerCluster)).Methods("GET", "OPTIONS")
 	// specify the program should listen on port 8080
 	// nil -> DefaultServeMux
 	// log error with log.Fatal
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", r))
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -83,6 +86,13 @@ func main() {
 func handlerPost(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Received one request")
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
+	// exit early for OPTIONS method
+	if r.Method == "OPTIONS" {
+		return
+	}
+	// parse let and lon
 	lat, _ := strconv.ParseFloat(r.FormValue("lat"), 64)
 	lon, _ := strconv.ParseFloat(r.FormValue("lon"), 64)
 	// construct post
@@ -139,6 +149,12 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 func handlerSearch(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Received one request for search")
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
+	// exit early for OPTIONS method
+	if r.Method == "OPTIONS" {
+		return
+	}
 	// get geo-location information
 	// convert from string -> float
 	lat, _ := strconv.ParseFloat(r.URL.Query().Get("lat"), 64)
@@ -179,6 +195,11 @@ func handlerSearch(w http.ResponseWriter, r *http.Request) {
 func handlerCluster(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Received one cluster request")
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
+	if r.Method == "OPTIONS" {
+		return
+	}
 	term := r.URL.Query().Get("term")
 	query := elastic.NewRangeQuery(term).Gte(0.9) // confidence level
 	searchResult, err := readFromES(query, POST_INDEX)
