@@ -30,7 +30,7 @@ I chose not to store the media file in the database directly because
 * GCS is highly available, durable and less expensive.
 
 ## Google Map API
-![Photos](https://github.com/mastevb/SocialMe/blob/master/socialme-web/src/assets/images/Screen%20Shot%202020-08-02%20at%208.45.03%20PM.png)
+![Photos](https://github.com/mastevb/SocialMe/blob/master/socialme-web/src/assets/images/Screen%20Shot%202020-08-02%20at%209.29.59%20PM.png)
 
 ## Token Based Authentication
 
