@@ -31,6 +31,7 @@ I chose not to store the media file in the database directly because
 
 ## Google Map API
 ![Photos](https://github.com/mastevb/SocialMe/blob/master/socialme-web/src/assets/images/Screen%20Shot%202020-08-02%20at%209.29.59%20PM.png)
+One of the important functions of this web application is the feature of showing the posts on a map, which is implemented with the Google Map API. When a post is generated, the program gathers the location information and stores such information in Elasticsearch, which is then displayed on the map.
 
 ## Token Based Authentication
 
