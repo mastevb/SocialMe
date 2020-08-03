@@ -16,10 +16,18 @@ So why did I choose to use Go?
     * Goroutines communicate through channels, and channels are built into the language.Channels remove the need for more explicit locking and thus is easier to write correctly, tune for perforemance and ebug.
 
 ## Google Vision API
+I used Google's Cloud Vision API for image labeling, and enables a feature for detecting nearby "faces". According to Google, the Cloud VIsion API offers powerful pre-trained machine learning models through REST and RPC APIs that assign labels to images and quickly classify them into millions of predefined categories.
 
 ## Elasticsearch engine
+Elasticsearch is an open-source, distributed, RESTful search engine. Elasticsearch stores data so developers can query the data quickly.
+I used Elasticsearch as a NoSQL database for storing user and post information. The server creates an index for the geolocation of each post so the database can provide a quick geolocation-based search, implemented by a k-d tree for pruning.
 
 ## Google Cloud Storage
+I used Google Cloud Storage for storing the media files and store the corresponding link of each file as metadata in Elasticsearch.
+I chose not to store the media file in the database directly because
+* Databases is not good, in general, with storing a binary blob.
+* Storing media files in database take space and the performance is not as good.
+* GCS is highly available, durable and less expensive.
 
 ## Google Map API
 ![Photos](https://github.com/mastevb/SocialMe/blob/master/socialme-web/src/assets/images/Screen%20Shot%202020-08-02%20at%208.45.03%20PM.png)
