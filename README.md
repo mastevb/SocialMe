@@ -46,13 +46,26 @@ Thus, there's a few advantages of using a token-based authentication
 * Stateless, no need to store anything at all on the server
 * Self-contained, the token contains all the data required to check its validity
 * Mobile friendly, native mobile platforms and cookies do not mix well
-## React Router v4
 
+## React Router v4
+React Router is a collection of navigational components that compose declaratively with the application.
+A user that goes into the protected route will be redirected to login if ther user is not authenticated. Read more about how to implement this feature [here](https://ui.dev/react-router-v4-protected-routes-authentication/)
 
 ## JWT
-
+JSON Web Token (JWT) is a open standard that defines a compact and self-contained way for securely transmitting information between parties as a JSON object. I used jwt-go, an open source project for JSON Web Token implementation in Go for protecting the processing of requests.
 
 ##  Google Kubernetes Engine
+GKE provides a managed environment for deploying, managing and scaling containerized applications using Google infrastructure. 
+Why GKE?
+* Google is the original creator of Kubernetes
+* GKE supports the common Docker container format and manages them automatically based on requirements
+* CHEAP
 
+Kubernetes is a portable, extensible and open-source platform for managing containerized workloads and services that facilitates both declarative configuration and automation.
 
-## AWS Amplify
+Docker container is a lightweight, standalone, executable package of software that includes everything needed ot run an application.
+* code
+* runtime
+* system tools
+* system libraries
+* settings
