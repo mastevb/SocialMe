@@ -34,11 +34,25 @@ I chose not to store the media file in the database directly because
 One of the important functions of this web application is the feature of showing the posts on a map, which is implemented with the Google Map API. When a post is generated, the program gathers the location information and stores such information in Elasticsearch, which is then displayed on the map.
 
 ## Token Based Authentication
+Unlike my previous [Job Recommendation](https://github.com/mastevb/JobRecommendation) project, where I used session-based authentication, this project features token-based authentication. In token-based authentication,
+* A user enters their login credentials
+* The server verifies the credentials are correct and create an encrypted and signed token with a private key
+* Client-side stores the token returned from the server
+* On subsequent requests, the token is decoded with the same private key and if valid the request is processed
+* Once a user logs out, the token is destroyed client-side, no interaction with the server is necessary
+* 
+Thus, there's a few advantages of using a token-based authentication
 
-* React Router v4
+* Stateless, no need to store anything at all on the server
+* Self-contained, the token contains all the data required to check its validity
+* Mobile friendly, native mobile platforms and cookies do not mix well
+## React Router v4
 
-* JWT
+
+## JWT
+
 
 ##  Google Kubernetes Engine
+
 
 ## AWS Amplify
