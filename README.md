@@ -4,3 +4,25 @@ Hi! My name is Steve, and I'm a 4th year B.S./M.S. student at [UWCSE](https://ww
 
 ## About SocialMe
 ![Photos](https://github.com/mastevb/SocialMe/blob/master/socialme-web/src/assets/images/Screen%20Shot%202020-08-02%20at%208.44.03%20PM.png)
+SocialMe is a Google Cloud based, React based and Go based social network web application for connecting people around by shared photos and videos. This idea was inspired by the "nearme" feature in TikTok.
+
+## Why Go?
+
+## Google Vision API
+![Photos](https://github.com/mastevb/SocialMe/blob/master/socialme-web/src/assets/images/Screen%20Shot%202020-08-02%20at%208.45.03%20PM.png)
+
+## Elasticsearch engine
+
+## Google Cloud Storage
+
+## Google Map API
+
+## Token Based Authentication
+
+## React Router v4
+
+## JWT
+
+##  Google Kubernetes Engine
+
+## AWS Amplify
